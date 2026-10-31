@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT TR | Siber Vatan Karargahı</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #030508; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; position: relative; }
+
+        /* Arka Plan Görseli */
+        .flag-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(3, 5, 8, 0.90), rgba(3, 5, 8, 0.96)), 
+                        url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover; z-index: -1;
+        }
+
+        /* Sağ ve Sol Türk Bayrakları */
+        .side-flag {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            width: 110px; height: 350px; z-index: 100;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg') no-repeat center center;
+            background-size: contain; opacity: 0.85; filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.8));
+            pointer-events: none; transition: 0.3s;
+        }
+        .side-flag.left { left: 15px; }
+        .side-flag.right { right: 15px; }
+
+        /* Mobil Ekranlarda Bayrakların Sıkışmaması İçin */
+        @media (max-width: 900px) {
+            .side-flag { display: none; }
+        }
+
+        header {
+            text-align: center; padding: 25px 15px; border-bottom: 2px solid rgba(220, 38, 38, 0.6);
+            background: rgba(11, 15, 25, 0.95); backdrop-filter: blur(10px); position: relative;
+        }
+        header h1 { font-size: 2.2rem; color: #fff; letter-spacing: 2px; text-shadow: 0 0 25px rgba(239, 68, 68, 0.9); }
+        header h1 span { color: #dc2626; }
+        header p { color: #94a3b8; margin-top: 5px; font-size: 0.95rem; }
+
+        .music-box {
+            margin-top: 12px; display: inline-block; background: rgba(3, 7, 18, 0.95);
+            padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.6);
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+        }
+        .music-box span { font-size: 0.8rem; color: #f87171; display: block; margin-bottom: 4px; font-weight: bold; }
+        audio { height: 28px; width: 210px; }
+
+        .container { max-width: 1000px; margin: 25px auto; padding: 0 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+
+        .card {
+            background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 12px; padding: 20px; backdrop-filter: blur(8px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .card h2 { font-size: 1.15rem; margin-bottom: 12px; color: #f87171; display: flex; align-items: center; gap: 8px; }
+        .card p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; }
+
+        .input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+        .input-group input {
+            flex: 1; padding: 10px; background: #030712; border: 1px solid #374151;
+            border-radius: 6px; color: #fff; font-size: 0.9rem; outline: none;
+        }
+        .input-group input:focus { border-color: #dc2626; }
+        .input-group button {
+            background: #dc2626; color: #fff; border: none; padding: 0 16px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .input-group button:hover { background: #b91c1c; }
+
+        .result-box {
+            background: #030712; border: 1px solid #1e293b; border-radius: 6px;
+            padding: 12px; font-size: 0.85rem; color: #38bdf8; min-height: 85px; max-height: 200px; overflow-y: auto; word-break: break-word;
+        }
+
+        .chat-card { grid-column: 1 / -1; }
+        .chat-messages {
+            height: 160px; background: #030712; border: 1px solid #374151; border-radius: 6px;
+            padding: 10px; overflow-y: auto; margin-bottom: 12px; font-size: 0.85rem;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .chat-msg { background: rgba(30, 41, 59, 0.7); padding: 6px 10px; border-radius: 4px; border-left: 3px solid #dc2626; }
+        .chat-msg strong { color: #f87171; }
+
+        footer { text-align: center; padding: 20px; color: #64748b; font-size: 0.8rem; border-top: 1px solid #1e293b; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+    <div class="flag-bg"></div>
+
+    <!-- Sağ ve Sol Türk Bayrakları -->
+    <div class="side-flag left"></div>
+    <div class="side-flag right"></div>
+
+    <header>
+        <h1><i class="fa-solid fa-shield-halved"></i> OSINT <span>TR</span></h1>
+        <p>Siber Vatan Açık Kaynak İstihbarat Karargahı</p>
+        
+        <div class="music-box">
+            <span><i class="fa-solid fa-music"></i> Karargah Müzik Çalar</span>
+            <audio controls preload="auto" loop>
+                <source src="muzik.mp3" type="audio/mpeg">
+            </audio>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- Canlı IP Sorgulama -->
+        <section class="card">
+            <h2><i class="fa-solid fa-network-wired"></i> Anlık IP İstihbaratı</h2>
+            <p>Siteden ayrılmadan hedef IP adresinin konum, ISP ve altyapı bilgilerini teryarlayın.</p>
+            <div class="input-group">
+                <input type="text" id="ipInput" placeholder="Örn: 8.8.8.8">
+                <button onclick="queryIP()">Sorgula</button>
+            </div>
+            <div class="result-box" id="ipResults">Sonuçlar doğrudan burada görünecek...</div>
+        </section>
+
+        <!-- Canlı Web & Domain Analizi -->
+        <section class="card">
+            <h2><i class="fa-solid fa-globe"></i> Web & Domain Analizi</h2>
+            <p>Domain adının sunucu IP adresini ve DNS kayıtlarını anında listeleyin.</p>
+            <div class="input-group">
+                <input type="text" id="domainInput" placeholder="Örn: google.com">
+                <button onclick="queryDomain()">Analiz Et</button>
+            </div>
+            <div class="result-box" id="domainResults">Sonuçlar doğrudan burada görünecek...</div>
+        </section>
+
+        <!-- IMEI Doğrulama Paneli -->
+        <section class="card">
+            <h2><i class="fa-solid fa-mobile-screen-button"></i> IMEI Geçerlilik & TAC Taraması</h2>
+            <p>15 haneli IMEI numarasının Luhn algoritması ile doğrulanması ve analizi.</p>
+            <div class="input-group">
+                <input type="text" id="imeiInput" placeholder="15 Haneli IMEI Girin...">
+                <button onclick="queryIMEI()">Doğrula</button>
+            </div>
+            <div class="result-box" id="imeiResults">Sonuçlar doğrudan burada görünecek...</div>
+        </section>
+
+        <!-- Canlı Operasyon Sohbet Hattı -->
+        <section class="card chat-card">
+            <h2><i class="fa-solid fa-comments"></i> Canlı Operasyon Sohbet Hattı</h2>
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-msg"><strong>[Sistem]:</strong> Güvenli OSINT TR kanalına bağlandınız.</div>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+                <input type="text" id="nickInput" placeholder="Adın" style="max-width: 90px;" value="Zehir">
+                <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="checkEnter(event)">
+                <button onclick="sendChatMessage()">Gönder</button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 OSINT TR | Etik ve Yasal Açık Kaynak İstihbarat Platformu.</p>
+    </footer>
+
+    <script>
+        // IP Sorgu
+        async function queryIP() {
+            const ip = document.getElementById('ipInput').value.trim();
+            const resBox = document.getElementById('ipResults');
+            if(!ip) return alert('Lütfen bir IP adresi girin!');
+
+            resBox.innerHTML = "⏳ İstihbarat verisi çekiliyor...";
+
+            try {
+                const res = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await res.json();
+
+                if(data.error) {
+                    resBox.innerHTML = `❌ Hata: ${data.reason || 'Geçersiz IP Adresi'}`;
+                    return;
+                }
+
+                resBox.innerHTML = `
+                    <b>📌 IP:</b> ${data.ip}<br>
+                    <b>🌍 Ülke:</b> ${data.country_name} (${data.country_code})<br>
+                    <b>🏙️ Şehir:</b> ${data.city} / ${data.region}<br>
+                    <b>🏢 Sağlayıcı:</b> ${data.org}<br>
+                    <b>📍 Enlem/Boylam:</b> ${data.latitude}, ${data.longitude}
+                `;
+            } catch(e) {
+                resBox.innerHTML = "❌ Veri çekilirken hata oluştu. İnternet bağlantınızı kontrol edin.";
+            }
+        }
+
+        // Domain Sorgu
+        async function queryDomain() {
+            const domain = document.getElementById('domainInput').value.trim().replace('https://','').replace('http://','');
+            const resBox = document.getElementById('domainResults');
+            if(!domain) return alert('Lütfen bir domain girin!');
+
+            resBox.innerHTML = "⏳ Sunucu verisi taranıyor...";
+
+            try {
+                const res = await fetch(`https://dns.google/resolve?name=${domain}`);
+                const data = await res.json();
+
+                if(!data.Answer) {
+                    resBox.innerHTML = `❌ Domain için DNS kaydı bulunamadı.`;
+                    return;
+                }
+
+                let output = `<b>🌐 Domain:</b> ${domain}<br><b>A Kayıtları (IP Adresleri):</b><br>`;
+                data.Answer.forEach(ans => {
+                    output += `• IP: <code>${ans.data}</code><br>`;
+                });
+
+                resBox.innerHTML = output;
+            } catch(e) {
+                resBox.innerHTML = "❌ Domain analizi yapılırken hata oluştu.";
+            }
+        }
+
+        // IMEI Sorgu
+        function queryIMEI() {
+            const imei = document.getElementById('imeiInput').value.trim();
+            const resBox = document.getElementById('imeiResults');
+
+            if(imei.length !== 15 || isNaN(imei)) {
+                resBox.innerHTML = "❌ IMEI tam olarak 15 haneli rakamlardan oluşmalıdır!";
+                return;
+            }
+
+            let sum = 0;
+            for (let i = 0; i < 15; i++) {
+                let digit = parseInt(imei.charAt(i));
+                if (i % 2 !== 0) {
+                    digit *= 2;
+                    if (digit > 9) digit -= 9;
+                }
+                sum += digit;
+            }
+
+            const isValid = (sum % 10 === 0);
+            const tac = imei.substring(0, 8);
+
+            resBox.innerHTML = `
+                <b>📱 IMEI:</b> ${imei}<br>
+                <b>Durum:</b> ${isValid ? '<span style="color:#4ade80">✅ Geçerli IMEI Algoritması</span>' : '<span style="color:#f87171">❌ Geçersiz IMEI</span>'}<br>
+                <b>🔍 TAC Kodu:</b> ${tac}
+            `;
+        }
+
+        // Canlı Sohbet
+        setInterval(loadChat, 1000);
+        function loadChat() {
+            const savedChat = localStorage.getItem('osint_live_chat');
+            if(savedChat) {
+                const box = document.getElementById('chatMessages');
+                if(box.innerHTML !== savedChat) {
+                    box.innerHTML = savedChat;
+                    box.scrollTop = box.scrollHeight;
+                }
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const nick = document.getElementById('nickInput').value.trim() || 'Operatör';
+            const text = input.value.trim();
+            if(!text) return;
+
+            const box = document.getElementById('chatMessages');
+            box.innerHTML += `<div class="chat-msg"><strong>${nick}:</strong> ${text}</div>`;
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+            localStorage.setItem('osint_live_chat', box.innerHTML);
+        }
+
+        function checkEnter(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+    </script>
+</body>
+</html>
