@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT TR | Siber Vatan İstihbarat Merkezi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #05070b; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; position: relative; }
+
+        /* Arka Plan / Bayrak Temalı Görsel */
+        .flag-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(5, 7, 11, 0.85), rgba(5, 7, 11, 0.95)), 
+                        url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover; z-index: -1;
+        }
+
+        header {
+            text-align: center; padding: 30px 20px; border-bottom: 2px solid rgba(220, 38, 38, 0.5);
+            background: rgba(11, 15, 25, 0.85); backdrop-filter: blur(10px);
+        }
+        header h1 { font-size: 2.8rem; color: #fff; letter-spacing: 2px; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+        header h1 span { color: #dc2626; }
+        header p { color: #94a3b8; margin-top: 8px; font-size: 1.1rem; }
+
+        /* Müzik Çalar Paneli */
+        .music-box {
+            margin-top: 15px; display: inline-block; background: rgba(3, 7, 18, 0.8);
+            padding: 8px 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+        .music-box span { font-size: 0.85rem; color: #f87171; display: block; margin-bottom: 5px; font-weight: bold; }
+        audio { height: 35px; width: 250px; }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; }
+
+        .card {
+            background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 12px; padding: 25px; backdrop-filter: blur(8px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .card h2 { font-size: 1.3rem; margin-bottom: 15px; color: #f87171; display: flex; align-items: center; gap: 10px; }
+        .card p { font-size: 0.9rem; color: #94a3b8; margin-bottom: 15px; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group input {
+            flex: 1; padding: 10px 15px; background: #030712; border: 1px solid #374151;
+            border-radius: 6px; color: #fff; font-size: 0.95rem; outline: none;
+        }
+        .input-group input:focus { border-color: #dc2626; }
+        .input-group button {
+            background: #dc2626; color: #fff; border: none; padding: 0 20px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .input-group button:hover { background: #b91c1c; }
+
+        .results ul { list-style: none; }
+        .results li { margin-bottom: 8px; }
+        .results a { color: #60a5fa; text-decoration: none; font-size: 0.9rem; }
+        .results a:hover { text-decoration: underline; }
+
+        .chat-card { grid-column: 1 / -1; }
+        .chat-messages {
+            height: 180px; background: #030712; border: 1px solid #374151; border-radius: 6px;
+            padding: 12px; overflow-y: auto; margin-bottom: 15px; font-size: 0.9rem;
+        }
+        .chat-messages p { margin-bottom: 8px; color: #cbd5e1; }
+
+        footer { text-align: center; padding: 30px; color: #64748b; font-size: 0.85rem; border-top: 1px solid #1e293b; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+    <div class="flag-bg"></div>
+
+    <header>
+        <h1><i class="fa-solid fa-shield-halved"></i> OSINT <span>TR</span></h1>
+        <p>Siber Vatanın Açık Kaynak İstihbarat ve Operasyon Merkezi</p>
+        
+        <!-- Müzik Kutusu (Senin gönderdiğin müzik yüklü) -->
+        <div class="music-box">
+            <span><i class="fa-solid fa-music"></i> Karargah Müzik Çalar</span>
+            <audio controls loop>
+                <source src="muzik.mp3" type="audio/mpeg">
+                Tarayıcınız ses öğesini desteklemiyor.
+            </audio>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- Kullanıcı Adı OSINT -->
+        <section class="card">
+            <h2><i class="fa-solid fa-user-secret"></i> Kullanıcı Adı & E-Posta Taraması</h2>
+            <p>Hedef kullanıcının dijital ayak izlerini ve açık kaynak profillerini sorgulayın.</p>
+            <div class="input-group">
+                <input type="text" id="usernameInput" placeholder="Kullanıcı adı girin...">
+                <button onclick="searchUsername()">Sorgula</button>
+            </div>
+            <div class="results" id="userResults"></div>
+        </section>
+
+        <!-- Telefon Numarası İstihbaratı -->
+        <section class="card">
+            <h2><i class="fa-solid fa-phone"></i> Telefon Numarası Analizi</h2>
+            <p>Açık kaynaklar ve küresel rehberler üzerinden numara kayıt araştırması.</p>
+            <div class="input-group">
+                <input type="text" id="phoneInput" placeholder="+905554443322">
+                <button onclick="searchPhone()">Analiz Et</button>
+            </div>
+            <div class="results" id="phoneResults"></div>
+        </section>
+
+        <!-- IP / Domain İstihbaratı -->
+        <section class="card">
+            <h2><i class="fa-solid fa-network-wired"></i> IP & Domain İstihbaratı</h2>
+            <p>Sunucu konumları, ağ altyapısı ve WHOIS kayıtlarını tarayın.</p>
+            <div class="input-group">
+                <input type="text" id="ipInput" placeholder="IP veya Domain (örn: hedef.com)">
+                <button onclick="searchIP()">Sorgula</button>
+            </div>
+            <div class="results" id="ipResults"></div>
+        </section>
+
+        <!-- Canlı Operasyon / Sohbet Alanı -->
+        <section class="card chat-card">
+            <h2><i class="fa-solid fa-comments"></i> Canlı Operasyon Sohbet Hattı</h2>
+            <p>Ekip arkadaşlarınızla anlık olarak haberleşin.</p>
+            <div id="chatMessages" class="chat-messages">
+                <p><strong>[Sistem]:</strong> Güvenli OSINT TR kanalına bağlandınız.</p>
+            </div>
+            <div class="input-group" style="margin-bottom:0;">
+                <input type="text" id="chatInput" placeholder="Mesajınızı yazın...">
+                <button onclick="sendChatMessage()">Gönder</button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 OSINT TR | Tüm Hakları Saklıdır. Yasal ve Etik Açık Kaynak İstihbarat Platformu.</p>
+    </footer>
+
+    <script>
+        function searchUsername() {
+            const val = document.getElementById('usernameInput').value;
+            const res = document.getElementById('userResults');
+            if(!val) return alert('Lütfen bir kullanıcı adı girin.');
+            res.innerHTML = `<p><strong>Hedef: <code>${val}</code></strong></p>
+                <ul>
+                    <li><a href="https://whatsmyname.app/?q=${val}" target="_blank">🔍 WhatsMyName Taraması</a></li>
+                    <li><a href="https://haveibeenpwned.com/edns/v1?account=${val}" target="_blank">⚠️ Sızıntı Kontrolü (HIBP)</a></li>
+                    <li><a href="https://www.google.com/search?q=%22${val}%22" target="_blank">🌐 Google Dorking Araması</a></li>
+                </ul>`;
+        }
+
+        function searchPhone() {
+            const val = document.getElementById('phoneInput').value;
+            const res = document.getElementById('phoneResults');
+            if(!val) return alert('Lütfen telefon numarası girin.');
+            res.innerHTML = `<p><strong>Hedef: <code>${val}</code></strong></p>
+                <ul>
+                    <li><a href="https://www.truecaller.com/search/tr/${val}" target="_blank">📞 Truecaller Küresel Rehber</a></li>
+                    <li><a href="https://www.google.com/search?q=${val}" target="_blank">🔍 Web İzleri Araştırması</a></li>
+                </ul>`;
+        }
+
+        function searchIP() {
+            const val = document.getElementById('ipInput').value;
+            const res = document.getElementById('ipResults');
+            if(!val) return alert('Lütfen IP veya Domain girin.');
+            res.innerHTML = `<p><strong>Hedef: <code>${val}</code></strong></p>
+                <ul>
+                    <li><a href="https://www.shodan.io/host/${val}" target="_blank">🛡️ Shodan Ağ Taraması</a></li>
+                    <li><a href="https://whois.domaintools.com/${val}" target="_blank">📋 WHOIS Kayıtları</a></li>
+                </ul>`;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const box = document.getElementById('chatMessages');
+            if(!input.value) return;
+            box.innerHTML += `<p><strong>Zehir:</strong> ${input.value}</p>`;
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
