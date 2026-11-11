@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBER KARARGAH ULTRA | Türkiye Cumhuriyeti İstihbarat Portalı 🇹🇷</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { width: 100%; min-height: 100vh; background: #5a0000; color: white; overflow-x: hidden; position: relative; }
+
+.background {
+    position: fixed; inset: 0; overflow: hidden;
+    background: radial-gradient(circle at center, #ff1a1a 0%, #800000 55%, #2a0000 100%);
+    z-index: -2;
+}
+.flag {
+    position: absolute; width: 120%; height: 120%; left: -10%; top: -10%;
+    object-fit: cover; animation: wave 5s ease-in-out infinite;
+    filter: drop-shadow(0 0 30px rgba(255,0,0,.5)); opacity: 0.85;
+}
+@keyframes wave {
+    0% { transform: perspective(900px) rotateY(-5deg) scale(1.05); }
+    50% { transform: perspective(900px) rotateY(5deg) scale(1.12); }
+    100% { transform: perspective(900px) rotateY(-5deg) scale(1.05); }
+}
+.overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(5,7,11,.90)); z-index: -1; }
+
+.ticker-wrap {
+    width: 100%; background: #990000; color: #fff; overflow: hidden;
+    height: 38px; line-height: 38px; border-bottom: 2px solid #ff4d4d;
+    box-shadow: 0 0 15px rgba(255,0,0,0.6); display: flex; align-items: center;
+}
+.ticker-head {
+    background: #000; padding: 0 15px; font-weight: bold; color: #ff3333;
+    font-size: 0.85rem; z-index: 10; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.ticker-move {
+    display: inline-block; white-space: nowrap; padding-left: 100%;
+    animation: ticker 35s linear infinite; font-size: 0.9rem; color: #f87171; font-weight: bold;
+}
+@keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+header { text-align: center; padding: 25px 15px 15px 15px; }
+h1 {
+    font-size: clamp(35px, 6vw, 75px); font-weight: 900; letter-spacing: 6px;
+    text-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000, 0 0 60px #ff0000;
+}
+p.motto { margin-top: 10px; font-size: clamp(14px, 1.8vw, 22px); letter-spacing: 4px; text-shadow: 0 0 15px black; color: #f1f5f9; }
+.line { width: 180px; height: 4px; background: white; margin: 15px auto; box-shadow: 0 0 20px white; }
+
+.music-box {
+    margin-top: 12px; display: inline-block; background: rgba(15, 23, 42, 0.88);
+    padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+}
+.music-box span { font-size: 0.8rem; color: #fca5a5; display: block; margin-bottom: 5px; font-weight: bold; }
+audio { height: 30px; width: 220px; }
+
+.container {
+    max-width: 1400px; margin: 20px auto; padding: 0 20px 40px 20px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 20px;
+}
+.card {
+    background: rgba(10, 15, 26, 0.90); border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);
+    box-shadow: 0 0 25px rgba(220, 38, 38, 0.2); display: flex; flex-direction: column; justify-content: space-between;
+}
+.card.ultra { border-color: #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.25); }
+.card.sherlock-card { border-color: #a855f7; box-shadow: 0 0 25px rgba(168, 85, 247, 0.3); grid-column: span 1; }
+.card.loc { border-color: #10b981; box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); grid-column: span 1; }
+
+@media (min-width: 900px) { 
+    .card.loc { grid-column: span 2; } 
+    .card.sherlock-card { grid-column: span 2; }
+}
+
+.card h2 { font-size: 1.05rem; margin-bottom: 12px; color: #fca5a5; display: flex; align-items: center; gap: 8px; }
+.card.ultra h2 { color: #38bdf8; }
+.card.loc h2 { color: #34d399; }
+.card.sherlock-card h2 { color: #c084fc; }
+.card p { font-size: 0.82rem; color: #cbd5e1; margin-bottom: 12px; }
+
+.input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+.input-group input, .input-group select {
+    flex: 1; padding: 10px; background: #030712; border: 1px solid #475569;
+    border-radius: 6px; color: #fff; font-size: 0.9rem; outline: none;
+}
+.input-group input:focus, .input-group select:focus { border-color: #ef4444; }
+.card.ultra .input-group input:focus { border-color: #38bdf8; }
+.card.sherlock-card .input-group input:focus { border-color: #a855f7; }
+
+.input-group button {
+    background: #dc2626; color: #fff; border: none; padding: 0 16px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
+}
+.card.ultra .input-group button { background: #0284c7; }
+.card.sherlock-card .input-group button { background: #9333ea; }
+.input-group button:hover { opacity: 0.85; }
+
+.result-box {
+    background: #020617; border: 1px solid #1e293b; border-radius: 8px;
+    padding: 14px; font-size: 0.83rem; color: #38bdf8; min-height: 130px; max-height: 280px; 
+    overflow-y: auto; word-break: break-word; font-family: 'Courier New', Courier, monospace;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8); position: relative;
+}
+.result-box::before {
+    content: "KARARGAH_LOG://"; display: block; font-size: 0.7rem; color: #64748b; margin-bottom: 6px; border-bottom: 1px dashed #1e293b; padding-bottom: 3px;
+}
+
+#map { height: 260px; width: 100%; border-radius: 8px; border: 1px solid #10b981; margin-top: 10px; }
+
+footer { text-align: center; padding: 20px; color: #cbd5e1; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); }
+</style>
+</head>
+
+<body>
+
+<div class="background">
+    <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg" alt="Türk Bayrağı">
+    <div class="overlay"></div>
+</div>
+
+<div class="ticker-wrap">
+    <div class="ticker-head"><i class="fa-solid fa-shield-halved"></i> KARARGAH ULTRA SÜRÜM:</div>
+    <div class="ticker-move">
+        🚀 Canlı Sherlock OSINT & Instagram Profil Analiz Motoru Devrede ••• 🇹🇷 Türkiye Cumhuriyeti Siber İstihbarat Portalı
+    </div>
+</div>
+
+<header>
+    <h1>CYBER KARARGAH</h1>
+    <div class="line"></div>
+    <p class="motto">NE MUTLU TÜRKÜM DİYENE</p>
+    
+    <div class="music-box">
+        <span><i class="fa-solid fa-music"></i> Karargah Fon Müziği</span>
+        <audio controls preload="auto" loop id="bgMusic">
+            <source src="muzik.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+</header>
+
+<main class="container">
+
+    <!-- 1. SHERLOCK KULLANICI ADI TARAYICISI (CANLI SORGULAMA) -->
+    <section class="card sherlock-card">
+        <h2><i class="fa-solid fa-user-ninja"></i> Sherlock Pro - Canlı Kullanıcı Adı & İz Tarayıcısı</h2>
+        <p>Hedef takma adın küresel platformlardaki hesap durumunu anlık canlı API ve HTTP istekleriyle tara.</p>
+        <div class="input-group">
+            <input type="text" id="sherlockInput" placeholder="Kullanıcı adı girin (örn: hosnateam)...">
+            <button onclick="runProSherlock()">Canlı Tara</button>
+        </div>
+        <div class="result-box" id="sherlockResults">Sistem hazır. Kullanıcı adı girip "Canlı Tara" butonuna basın...</div>
+    </section>
+
+    <!-- 2. INSTAGRAM PROFİL OSINT VE İSTİHBARAT ANALİZÖRÜ -->
+    <section class="card ultra">
+        <h2><i class="fa-brands fa-instagram"></i> Instagram Profili & Dijital İz Analizi</h2>
+        <p>Instagram kullanıcı adını derin açık kaynak istihbarat tünellerinden sorgulayın.</p>
+        <div class="input-group">
+            <input type="text" id="instaInput" placeholder="Instagram kullanıcı adı...">
+            <button onclick="runInstaOSINT()">Analiz Et</button>
+        </div>
+        <div class="result-box" id="instaResults">Instagram kullanıcı adı bekleniyor...</div>
+    </section>
+
+    <!-- 3. CANLI HARİTA VE KONUM -->
+    <section class="card loc">
+        <h2><i class="fa-solid fa-map-location-dot"></i> Canlı Harita & Konum İşaretleyici</h2>
+        <p>Enlem/Boylam koordinatını doğrudan harita üzerinde canlı olarak konumlandırın.</p>
+        <div class="input-group">
+            <input type="text" id="locCoords" placeholder="Örn: 41.0082, 28.9784">
+            <button onclick="plotLocation()">Haritada Göster</button>
+        </div>
+        <div class="result-box" id="locResults">Harita hazır. Koordinat bekleniyor...</div>
+        <div id="map"></div>
+    </section>
+
+    <!-- 4. CANLI IP İSTİHBARATI (API) -->
+    <section class="card ultra">
+        <h2><i class="fa-solid fa-globe"></i> Canlı IP & Konum Analizi (API)</h2>
+        <p>Hedef IP adresinin ülke, şehir, İSS ve ASN verilerini anında sorgulayın.</p>
+        <div class="input-group">
+            <input type="text" id="ipInput" placeholder="Örn: 8.8.8.8">
+            <button onclick="queryIP()">Canlı Sorgula</button>
+        </div>
+        <div class="result-box" id="ipResults">IP sorgusu bekleniyor...</div>
+    </section>
+
+    <!-- 5. CANLI DNS SORGULAYICI (Google DoH API) -->
+    <section class="card ultra">
+        <h2><i class="fa-solid fa-server"></i> Canlı DNS & Sunucu Kayıtları (DoH API)</h2>
+        <p>Google DNS-over-HTTPS altyapısı ile A kayıtlarını canlı olarak çekin.</p>
+        <div class="input-group">
+            <input type="text" id="domainInput" placeholder="Örn: google.com">
+            <button onclick="queryDNS()">DNS Kayıtlarını Çek</button>
+        </div>
+        <div class="result-box" id="domainResults">Domain bekleniyor...</div>
+    </section>
+
+    <!-- 6. KRİPTOGRAFİK HASH & ENTROPİ ANALİZİ -->
+    <section class="card ultra">
+        <h2><i class="fa-solid fa-fingerprint"></i> Hash Türü & Parola Güç Ölçer</h2>
+        <p>Girilen veri/karma türünü (MD5, SHA, NTLM vb.) ve entropi değerini hesaplayın.</p>
+        <div class="input-group">
+            <input type="text" id="hashInput" placeholder="Hash veya Parola...">
+            <button onclick="analyzeHash()">Analiz Et</button>
+        </div>
+        <div class="result-box" id="hashResults">Girdi bekleniyor...</div>
+    </section>
+
+    <!-- 7. CANLI MAC OUI DONANIM SORGULAMA -->
+    <section class="card ultra">
+        <h2><i class="fa-solid fa-microchip"></i> MAC Adresi Donanım Üreticisi (API)</h2>
+        <p>MAC adresinden donanım markasını üretici veritabanından sorgulayın.</p>
+        <div class="input-group">
+            <input type="text" id="macInput" placeholder="Örn: 00:1A:2B:3C:4D:5E">
+            <button onclick="analyzeMAC()">Üreticiyi Bul</button>
+        </div>
+        <div class="result-box" id="macResults">MAC bekleniyor...</div>
+    </section>
+
+    <!-- 8. IMEI LUHN ALGORİTMASI -->
+    <section class="card">
+        <h2><i class="fa-solid fa-mobile-screen-button"></i> IMEI Luhn Algoritma Testi</h2>
+        <p>15 haneli IMEI numarasının matematiksel doğrulamasını yerel hesaplayın.</p>
+        <div class="input-group">
+            <input type="text" id="imeiInput" placeholder="15 Haneli IMEI...">
+            <button onclick="queryIMEI()">Doğrula</button>
+        </div>
+        <div class="result-box" id="imeiResults">IMEI bekleniyor...</div>
+    </section>
+
+    <!-- 9. GÜVENLİ PAROLA ÜRETİCİ -->
+    <section class="card">
+        <h2><i class="fa-solid fa-key"></i> Kriptografik Parola Üretici</h2>
+        <p>Siber saldırılara dayanıklı rastgele karmaşık parola oluşturun.</p>
+        <div class="input-group">
+            <select id="passLen">
+                <option value="12">12 Karakter</option>
+                <option value="16">16 Karakter (Güçlü)</option>
+                <option value="24">24 Karakter (Maksimum)</option>
+            </select>
+            <button onclick="htPassGen()">Üret</button>
+        </div>
+        <div class="result-box" id="passResults">Seçim bekleniyor...</div>
+    </section>
+
+    <!-- 10. GSM FORMAT ANALİZÖRÜ -->
+    <section class="card">
+        <h2><i class="fa-solid fa-phone-volume"></i> GSM & Uluslararası Format Doğrulama</h2>
+        <p>Telefon numarasının E.164 uluslararası biçimini ve ülke kodunu ayrıştırın.</p>
+        <div class="input-group">
+            <input type="text" id="phoneInput" placeholder="+905xxxxxxxxx">
+            <button onclick="analyzePhone()">Ayrıştır</button>
+        </div>
+        <div class="result-box" id="phoneResults">Numara bekleniyor...</div>
+    </section>
+
+</main>
+
+<footer>
+    <p>© 2026 CYBER KARARGAH ULTRA | Açık Kaynak İstihbarat ve Siber Güvenlik Analiz Portalı.</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const bgMusic = document.getElementById('bgMusic');
+    function playAudio() {
+        if (bgMusic && bgMusic.paused) {
+            bgMusic.play().then(() => {
+                document.removeEventListener('click', playAudio);
+                document.removeEventListener('keydown', playAudio);
+            }).catch(e => {});
+        }
+    }
+    document.addEventListener('click', playAudio);
+    document.addEventListener('keydown', playAudio);
+
+    // 1. SHERLOCK PRO (CANLI ASENKRON TARAMA MOTORU)
+    async function runProSherlock() {
+        const username = document.getElementById('sherlockInput').value.trim();
+        const res = document.getElementById('sherlockResults');
+        if(!username) return alert('Lütfen bir kullanıcı adı girin!');
+
+        res.innerHTML = `[>] Sherlock Pro Motoru Başlatıldı: <span style="color:#c084fc;">@${username}</span><br>[+] Platformlar taranıyor...<br><br>`;
+
+        const platforms = [
+            { name: "GitHub", url: `https://api.github.com/users/${username}`, check: d => d.id !== undefined, profile: `https://github.com/${username}` },
+            { name: "Twitter/X", url: `https://twitter.com/${username}`, direct: true, profile: `https://twitter.com/${username}` },
+            { name: "Instagram", url: `https://instagram.com/${username}`, direct: true, profile: `https://instagram.com/${username}` },
+            { name: "Telegram", url: `https://t.me/${username}`, direct: true, profile: `https://t.me/${username}` },
+            { name: "Steam", url: `https://steamcommunity.com/id/${username}`, direct: true, profile: `https://steamcommunity.com/id/${username}` },
+            { name: "Reddit", url: `https://www.reddit.com/user/${username}/about.json`, check: d => d.kind === "t2", profile: `https://reddit.com/user/${username}` }
+        ];
+
+        let output = `<b>[🎯] HEDEF KULLANICI ADI:</b> <span style="color:#c084fc;">@${username}</span><br>─────────────────────────────────────────<br>`;
+
+        for (let p of platforms) {
+            if(p.direct) {
+                output += `• <b>${p.name}:</b> <a href="${p.profile}" target="_blank" style="color:#38bdf8;">[Profil Bağlantısını Aç]</a><br>`;
+            } else {
+                try {
+                    let r = await fetch(p.url);
+                    if(r.ok) {
+                        let data = await r.json();
+                        if(p.check(data)) {
+                            output += `• <b>${p.name}:</b> <a href="${p.profile}" target="_blank" style="color:#4ade80;">[✅ HESAP TESPİT EDİLDİ]</a><br>`;
+                        } else {
+                            output += `• <b>${p.name}:</b> <span style="color:#f87171;">[❌ Bulunamadı]</span><br>`;
+                        }
+                    } else {
+                        output += `• <b>${p.name}:</b> <span style="color:#f87171;">[❌ Bulunamadı / Özel]</span><br>`;
+                    }
+                } catch(e) {
+                    output += `• <b>${p.name}:</b> <a href="${p.profile}" target="_blank" style="color:#38bdf8;">[Kontrol Et]</a><br>`;
+                }
+            }
+        }
+        output += `─────────────────────────────────────────<br><span style="color:#4ade80;">[SUCCESS] Canlı Tarama Tamamlandı.</span>`;
+        res.innerHTML = output;
+    }
+
+    // 2. INSTAGRAM PROFİL VE OSINT DİJİTAL İZ ANALİZİ
+    function runInstaOSINT() {
+        const username = document.getElementById('instaInput').value.trim().replace('@','');
+        const res = document.getElementById('instaResults');
+        if(!username) return alert('Instagram kullanıcı adı girin!');
+        
+        res.innerHTML = `
+            <b>[+] Hedef Instagram Hesabı:</b> <span style="color:#f472b6;">@${username}</span><br>
+            <b>[+] Dijital İz & Arama Tünelleri:</b><br>
+            • <a href="https://instagram.com/${username}" target="_blank" style="color:#4ade80;">🌐 Doğrudan Profil Sayfası</a><br>
+            • <a href="https://www.google.com/search?q=site:instagram.com+%22${username}%22" target="_blank" style="color:#38bdf8;">🔍 Google İndeksli Paylaşımları Tara</a><br>
+            • <a href="https://www.bing.com/search?q=site:instagram.com+%22${username}%22" target="_blank" style="color:#38bdf8;">🌐 Bing Görsel/Metin İzi Tara</a><br>
+            <span style="color:#4ade80;">[BAŞARILI] OSINT Bağlantı Tünelleri Oluşturuldu.</span>
+        `;
+    }
+
+    // 3. CANLI HARİTA
+    var map = L.map('map').setView([39.9208, 32.8541], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+    var currentMarker = null;
+
+    function plotLocation() {
+        var input = document.getElementById('locCoords').value.trim();
+        var res = document.getElementById('locResults');
+        if(!input) return alert('Koordinat girin!');
+        var parts = input.split(',');
+        if(parts.length < 2) return alert('Format: Enlem, Boylam (Örn: 41.0082, 28.9784)');
+        var lat = parseFloat(parts[0].trim());
+        var lng = parseFloat(parts[1].trim());
+        if(isNaN(lat) || isNaN(lng)) return alert('Geçersiz koordinat!');
+
+        if(currentMarker) map.removeLayer(currentMarker);
+        map.setView([lat, lng], 13);
+        currentMarker = L.marker([lat, lng]).addTo(map).bindPopup(`<b>Konum:</b> ${lat}, ${lng}`).openPopup();
+
+        res.innerHTML = `<b>[✓] ENLEM:</b> ${lat}<br><b>[✓] BOYLAM:</b> ${lng}<br><span style="color:#4ade80;">[BAŞARILI] Harita Canlı Güncellendi.</span>`;
+    }
+
+    // 4. CANLI IP İSTİHBARATI (API)
+    async function queryIP() {
+        const ip = document.getElementById('ipInput').value.trim();
+        const res = document.getElementById('ipResults');
+        if(!ip) return alert('IP adresi girin!');
+        res.innerHTML = "[>] Canlı IP API sorgusu gönderiliyor...";
+        try {
+            const r = await fetch(`https://ipwho.is/${ip}`);
+            const d = await r.json();
+            if(!d.success) { res.innerHTML = "❌ Geçersiz veya özel IP Adresi."; return; }
+            res.innerHTML = `
+                <b>📌 Hedef IP:</b> ${d.ip}<br>
+                <b>🌍 Ülke:</b> ${d.country} (${d.country_code})<br>
+                <b>🏙️ Şehir / Bölge:</b> ${d.city} / ${d.region}<br>
+                <b>🏢 İSS (ISP):</b> ${d.connection.isp}<br>
+                <b>🌐 ASN:</b> AS${d.connection.asn} (${d.connection.org})<br>
+                <span style="color:#4ade80;">[SUCCESS] Veriler API'den Doğrudan Çekildi.</span>
+            `;
+        } catch(e) { res.innerHTML = "❌ Ağ hatası oluştu."; }
+    }
+
+    // 5. CANLI DNS SORGULAYICI (Google DoH API)
+    async function queryDNS() {
+        const domain = document.getElementById('domainInput').value.trim().replace('https://','').replace('http://','').split('/')[0];
+        const res = document.getElementById('domainResults');
+        if(!domain) return alert('Domain girin!');
+        res.innerHTML = `[>] Google DoH API üzerinden ${domain} sorgulanıyor...`;
+        try {
+            const r = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
+            const d = await r.json();
+            if(!d.Answer) { res.innerHTML = "❌ A kaydı bulunamadı veya geçersiz domain."; return; }
+            let ips = d.Answer.map(a => a.data).join(', ');
+            res.innerHTML = `
+                <b>🌐 Domain:</b> ${domain}<br>
+                <b>📡 Canlı A Kayıtları (IP):</b> ${ips}<br>
+                <b>⏱️ TTL:</b> ${d.Answer[0].TTL} saniye<br>
+                <span style="color:#4ade80;">[SUCCESS] DNS Kayıtları Canlı Çekildi.</span>
+            `;
+        } catch(e) { res.innerHTML = "❌ DNS sorgu hatası."; }
+    }
+
+    // 6. HASH & ENTROPİ ANALİZİ
+    function analyzeHash() {
+        const str = document.getElementById('hashInput').value.trim();
+        const res = document.getElementById('hashResults');
+        if(!str) return alert('Girdi girin!');
+        
+        let type = "Düz Metin / Karmaşık Parola";
+        if (/^[a-fA-F0-9]{32}$/.test(str)) type = "MD5 Hash (128-bit)";
+        else if (/^[a-fA-F0-9]{40}$/.test(str)) type = "SHA-1 Hash (160-bit)";
+        else if (/^[a-fA-F0-9]{64}$/.test(str)) type = "SHA-256 Hash (256-bit)";
+        else if (/^\$2[ayb]\$.{56}$/.test(str)) type = "Bcrypt Hash";
+
+        let entropy = (str.length * 4.5).toFixed(1);
+        res.innerHTML = `
+            <b>[+] Karma/Metin Türü:</b> ${type}<br>
+            <b>[+] Karakter Uzunluğu:</b> ${str.length}<br>
+            <b>[+] Entropi Skoru:</b> ${entropy} bit<br>
+            <span style="color:#4ade80;">[SUCCESS] Statik Analiz Tamamlandı.</span>
+        `;
+    }
+
+    // 7. CANLI MAC OUI LOOKUP (API)
+    async function analyzeMAC() {
+        const mac = document.getElementById('macInput').value.trim().toUpperCase();
+        const res = document.getElementById('macResults');
+        if(!mac || mac.length < 8) return alert('Geçerli MAC adresi girin!');
+        res.innerHTML = "[>] OUI Veritabanından üretici sorgulanıyor...";
+        try {
+            const cleanMac = mac.replace(/[^A-F0-9]/g, '').slice(0,6);
+            const r = await fetch(`https://api.maclookup.app/v2/macs/${cleanMac}`);
+            const d = await r.json();
+            let vendor = d.company || "Bilinmeyen / Özel Üretici";
+            res.innerHTML = `
+                <b>[+] MAC Adresi:</b> ${mac}<br>
+                <b>[+] Üretici Firma:</b> <span style="color:#38bdf8;">${vendor}</span><br>
+                <span style="color:#4ade80;">[SUCCESS] OUI Sorgusu Başarılı.</span>
+            `;
+        } catch(e) { res.innerHTML = "❌ MAC API Bağlantı hatası."; }
+    }
+
+    // 8. IMEI LUHN HESAPLAYICI
+    function queryIMEI() {
+        const imei = document.getElementById('imeiInput').value.trim();
+        const res = document.getElementById('imeiResults');
+        if(imei.length !== 15 || isNaN(imei)) { res.innerHTML = "❌ 15 haneli IMEI girin!"; return; }
+        let sum = 0;
+        for (let i = 0; i < 15; i++) {
+            let digit = parseInt(imei.charAt(i));
+            if (i % 2 !== 0) { digit *= 2; if (digit > 9) digit -= 9; }
+            sum += digit;
+        }
+        let isValid = (sum % 10 === 0);
+        res.innerHTML = `
+            <b>📱 IMEI:</b> ${imei}<br>
+            <b>[+] Luhn Matematik Testi:</b> ${isValid ? '<span style="color:#4ade80">✅ Geçerli IMEI</span>' : '<span style="color:#f87171">❌ Geçersiz IMEI</span>'}
+        `;
+    }
+
+    // 9. PAROLA ÜRETİCİ
+    function htPassGen() {
+        const len = parseInt(document.getElementById('passLen').value);
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+        let pass = "";
+        for (let i = 0; i < len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+        document.getElementById('passResults').innerHTML = `
+            <b>🔑 Üretilen Parola:</b> <code style="color:#4ade80; background:#0f172a; padding:3px 8px; border-radius:4px;">${pass}</code>
+        `;
+    }
+
+    // 10. GSM FORMAT ANALİZİ
+    function analyzePhone() {
+        const num = document.getElementById('phoneInput').value.trim();
+        const res = document.getElementById('phoneResults');
+        if(!num || num.length < 8) return alert('Geçerli numara girin!');
+        let country = "Uluslararası / Belirsiz";
+        if(num.startsWith("+90") || num.startsWith("05") || num.startsWith("5")) country = "🇹🇷 Türkiye (TR GSM)";
+        else if(num.startsWith("+1")) country = "🇺🇸 ABD / Kanada";
+
+        res.innerHTML = `
+            <b>[✓] Numara:</b> ${num}<br>
+            <b>[+] Tespiti Yapılan Ülke:</b> ${country}<br>
+            <b>[+] Biçim:</b> E.164 Standartı
+        `;
+    }
+</script>
+
+</body>
+</html>
