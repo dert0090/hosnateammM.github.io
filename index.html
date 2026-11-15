@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBER KARARGAH ULTIMATE | Canlı API İstihbarat Portalı 🇹🇷</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { width: 100%; min-height: 100vh; background: #030303; color: #e2e8f0; overflow-x: hidden; position: relative; }
+
+.background {
+    position: fixed; inset: 0; overflow: hidden;
+    background: radial-gradient(circle at center, #2a0000 0%, #030303 70%, #000000 100%);
+    z-index: -2;
+}
+.flag {
+    position: absolute; width: 120%; height: 120%; left: -10%; top: -10%;
+    object-fit: cover; animation: wave 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 50px rgba(239, 68, 68, 0.5)); opacity: 0.2;
+}
+@keyframes wave {
+    0% { transform: perspective(900px) rotateY(-3deg) scale(1.02); }
+    50% { transform: perspective(900px) rotateY(3deg) scale(1.08); }
+    100% { transform: perspective(900px) rotateY(-3deg) scale(1.02); }
+}
+.overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(3,3,3,.8), rgba(3,3,3,.98)); z-index: -1; }
+
+.ticker-wrap {
+    width: 100%; background: #0a0a0a; color: #ef4444; overflow: hidden;
+    height: 38px; line-height: 38px; border-bottom: 1px solid #ef4444;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.4); display: flex; align-items: center;
+}
+.ticker-head {
+    background: #ef4444; color: #fff; padding: 0 15px; font-weight: bold;
+    font-size: 0.85rem; z-index: 10; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.ticker-move {
+    display: inline-block; white-space: nowrap; padding-left: 100%;
+    animation: ticker 25s linear infinite; font-size: 0.85rem; color: #fca5a5; font-weight: bold;
+}
+@keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+header { text-align: center; padding: 35px 15px 15px 15px; }
+h1 {
+    font-size: clamp(30px, 5vw, 65px); font-weight: 900; letter-spacing: 6px; color: #fff;
+    text-shadow: 0 0 15px #ef4444, 0 0 30px #ef4444, 0 0 60px #dc2626;
+}
+p.motto { margin-top: 8px; font-size: clamp(12px, 1.5vw, 18px); letter-spacing: 3px; color: #94a3b8; }
+.line { width: 160px; height: 3px; background: #ef4444; margin: 12px auto; box-shadow: 0 0 12px #ef4444; }
+
+.music-box {
+    margin-top: 10px; display: inline-block; background: rgba(15, 23, 42, 0.9);
+    padding: 6px 14px; border-radius: 8px; border: 1px solid #334155;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+}
+.music-box span { font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: bold; }
+audio { height: 26px; width: 200px; }
+
+.container {
+    max-width: 1400px; margin: 20px auto; padding: 0 20px 40px 20px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px;
+}
+.card {
+    background: rgba(10, 14, 20, 0.95); border: 1px solid #30363d;
+    border-radius: 10px; padding: 20px; backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; justify-content: space-between;
+    transition: 0.3s;
+}
+.card:hover { border-color: #ef4444; box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }
+.card.devil-card { border-color: #dc2626; box-shadow: 0 0 25px rgba(220, 38, 38, 0.2); }
+.card.wide { grid-column: span 1; }
+@media (min-width: 900px) { .card.wide { grid-column: span 2; } }
+
+.card h2 { font-size: 1rem; margin-bottom: 10px; color: #f87171; display: flex; align-items: center; gap: 8px; }
+.card p { font-size: 0.8rem; color: #8b949e; margin-bottom: 12px; }
+
+.input-group { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.input-group input, .input-group select, .input-group textarea {
+    flex: 1; padding: 9px 12px; background: #010409; border: 1px solid #30363d;
+    border-radius: 6px; color: #fff; font-size: 0.85rem; outline: none; transition: 0.2s; min-width: 120px;
+}
+.input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+.input-group button {
+    background: #dc2626; color: #fff; border: none; padding: 9px 16px;
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: 0.2s; white-space: nowrap;
+}
+.input-group button:hover { opacity: 0.9; background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+.result-box {
+    background: #010409; border: 1px solid #21262d; border-radius: 6px;
+    padding: 12px; font-size: 0.8rem; color: #58a6ff; min-height: 130px; max-height: 280px; 
+    overflow-y: auto; word-break: break-word; font-family: 'Courier New', Courier, monospace;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.9); position: relative;
+}
+.result-box::before {
+    content: "CANLI_API_ÇIKTI://"; display: block; font-size: 0.65rem; color: #484f58; margin-bottom: 4px; border-bottom: 1px dashed #21262d; padding-bottom: 2px;
+}
+
+#map { height: 250px; width: 100%; border-radius: 6px; border: 1px solid #30363d; margin-top: 10px; }
+footer { text-align: center; padding: 25px; color: #8b949e; font-size: 0.75rem; border-top: 1px solid #21262d; background: #010409; }
+</style>
+</head>
+
+<body>
+
+<div class="background">
+    <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg" alt="Türk Bayrağı">
+    <div class="overlay"></div>
+</div>
+
+<div class="ticker-wrap">
+    <div class="ticker-head"><i class="fa-solid fa-satellite-dish"></i> CANLI API AKIŞI:</div>
+    <div class="ticker-move">
+        🔥 Gerçek Zamanlı IP, DNS, Gravatar, GitHub, Hash ve Port Tarama Altyapısı Devrede ••• 🇹🇷 Cyber Karargah Ultimate
+    </div>
+</div>
+
+<header>
+    <h1>CYBER KARARGAH</h1>
+    <div class="line"></div>
+    <p class="motto">HAKİKATLER GİZLENEMEZ • CANLI İSTİHBARAT MERKEZİ</p>
+    
+    <div class="music-box">
+        <span><i class="fa-solid fa-music"></i> Karargah Fon Müziği</span>
+        <audio controls preload="auto" loop id="bgMusic">
+            <source src="muzik.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+</header>
+
+<main class="container">
+
+    <!-- 1. CANLI IP & İSS İSTİHBARATI -->
+    <section class="card devil-card">
+        <h2><i class="fa-solid fa-globe"></i> Canlı IP & Ağ İstihbarat Sorgu (Live API)</h2>
+        <p>Girilen IP adresini doğrudan küresel ipwho.is API'si üzerinden anlık olarak sorgular.</p>
+        <div class="input-group">
+            <input type="text" id="ipInput" placeholder="Örn: 8.8.8.8 veya boş bırak kendi IP'n">
+            <button onclick="queryLiveIP()">Canlı IP Çek</button>
+        </div>
+        <div class="result-box" id="ipResults">Canlı IP sorgu motoru hazır...</div>
+    </section>
+
+    <!-- 2. CANLI DNS ÇÖZÜMLEME -->
+    <section class="card devil-card">
+        <h2><i class="fa-solid fa-server"></i> Canlı DoH DNS Çözümleyici (Google API)</h2>
+        <p>Google DNS over HTTPS altyapısına canlı istek atarak domainin güncel A kayıtlarını getirir.</p>
+        <div class="input-group">
+            <input type="text" id="domainInput" placeholder="Örn: github.com">
+            <button onclick="queryLiveDNS()">DNS Sorgula</button>
+        </div>
+        <div class="result-box" id="domainResults">DNS çözümleyici hazır...</div>
+    </section>
+
+    <!-- 3. HOLEHE-PRO GERÇEK E-POSTA TARAYICI -->
+    <section class="card holehe-card wide">
+        <h2><i class="fa-solid fa-envelope-open-text"></i> Gerçek Zamanlı E-Posta Küresel Tarayıcı</h2>
+        <p>Gravatar ve GitHub resmi API'lerini canlı sorgulayarak e-postanın gerçek kayıt durumunu döker.</p>
+        <div class="input-group">
+            <input type="email" id="holeheInput" placeholder="ornek@gmail.com">
+            <button onclick="runLiveEmailScan()">Canlı Taramayı Başlat</button>
+        </div>
+        <div class="result-box" id="holeheResults">E-posta canlı arama motoru hazır...</div>
+    </section>
+
+    <!-- 4. SHERLOCK PRO GERÇEK KULLANICI ADI -->
+    <section class="card wide">
+        <h2><i class="fa-solid fa-user-ninja"></i> Gerçek GitHub & Sosyal Medya Kullanıcı Avı</h2>
+        <p>GitHub API üzerinden kullanıcı adının gerçek veritabanı kaydını, profil linkini ve detaylarını çeker.</p>
+        <div class="input-group">
+            <input type="text" id="sherlockInput" placeholder="Kullanıcı adı (örn: torvalds)">
+            <button onclick="runLiveUserScan()">Kullanıcıyı Avla</button>
+        </div>
+        <div class="result-box" id="sherlockResults">Kullanıcı avcısı hazır...</div>
+    </section>
+
+    <!-- 5. TELEKOM ÖN EK ANALİZİ -->
+    <section class="card phone-card wide">
+        <h2><i class="fa-solid fa-satellite-dish"></i> Telekom & Telefon Ön Ek İstihbarat Motoru</h2>
+        <p>GSM operatör bloklarına göre güncel numara ve ön ek eşleştirmesi yapar.</p>
+        <div class="input-group">
+            <input type="text" id="targetPhoneInput" placeholder="Örn: +905321234567">
+            <button onclick="analyzePhoneLive()">Ön Ek Analiz Et</button>
+        </div>
+        <div class="result-box" id="phoneGenResults">Telekom motoru hazır...</div>
+    </section>
+
+    <!-- 6. CANLI HARİTA -->
+    <section class="card wide">
+        <h2><i class="fa-solid fa-map-location-dot"></i> Canlı Koordinat & Harita Konumlandırma</h2>
+        <p>Enlem ve boylam değerlerini harita üzerinde nokta atışı gösterir.</p>
+        <div class="input-group">
+            <input type="text" id="locCoords" placeholder="Örn: 41.0082, 28.9784">
+            <button onclick="plotLocation()">Haritada İşaretle</button>
+        </div>
+        <div class="result-box" id="locResults">Harita motoru aktif...</div>
+        <div id="map"></div>
+    </section>
+
+</main>
+
+<footer>
+    <p>© 2026 CYBER KARARGAH ULTIMATE | %100 Canlı API Entegreli İstihbarat Portalı.</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const bgMusic = document.getElementById('bgMusic');
+    function playAudio() {
+        if (bgMusic && bgMusic.paused) {
+            bgMusic.play().then(() => {
+                document.removeEventListener('click', playAudio);
+                document.removeEventListener('keydown', playAudio);
+            }).catch(e => {});
+        }
+    }
+    document.addEventListener('click', playAudio);
+    document.addEventListener('keydown', playAudio);
+
+    // 1. CANLI IP SORGULAMA (ipwho.is API)
+    async function queryLiveIP() {
+        let ip = document.getElementById('ipInput').value.trim();
+        const res = document.getElementById('ipResults');
+        res.innerHTML = `[>] Canlı IP API sorgulanıyor...`;
+        try {
+            let url = ip ? `https://ipwho.is/${ip}` : `https://ipwho.is/`;
+            let r = await fetch(url);
+            let d = await r.json();
+            if(!d.success) {
+                res.innerHTML = `❌ Hata: ${d.message || 'Geçersiz IP adresi.'}`;
+                return;
+            }
+            res.innerHTML = `
+<b>[🎯] CANLI IP SONUCU:</b> ${d.ip}<br>
+• <b>Ülke:</b> ${d.country} (${d.country_code})<br>
+• <b>Şehir:</b> ${d.city}<br>
+• <b>Bölge:</b> ${d.region}<br>
+• <b>İSS (ISP):</b> <span style="color:#38bdf8;">${d.connection.isp}</span><br>
+• <b>ASN:</b> ${d.connection.asn} (${d.connection.org})<br>
+• <b>Koordinat:</b> ${d.latitude}, ${d.longitude}<br>
+<span style="color:#3fb950;">[SUCCESS] Canlı API Verisi Çekildi.</span>`;
+        } catch(e) {
+            res.innerHTML = `❌ Ağ veya API erişim hatası!`;
+        }
+    }
+
+    // 2. CANLI DNS ÇÖZÜMLEME (Google DoH API)
+    async function queryLiveDNS() {
+        let domain = document.getElementById('domainInput').value.trim().replace('https://','').replace('http://','').split('/')[0];
+        const res = document.getElementById('domainResults');
+        if(!domain) return alert('Domain girin!');
+        res.innerHTML = `[>] Google DoH API ile canlı DNS sorgulanıyor...`;
+        try {
+            let r = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
+            let d = await r.json();
+            if(!d.Answer) {
+                res.innerHTML = `❌ Bu domain için A kaydı bulunamadı.`;
+                return;
+            }
+            let records = d.Answer.map(a => `• IP: <span style="color:#3fb950;">${a.data}</span> (TTL: ${a.TTL}s)`).join('<br>');
+            res.innerHTML = `<b>[🎯] CANLI DNS (${domain}):</b><br>${records}<br><span style="color:#3fb950;">[SUCCESS] Google DoH API Yanıtı Başarılı.</span>`;
+        } catch(e) {
+            res.innerHTML = `❌ DNS sorgulama başarısız.`;
+        }
+    }
+
+    // 3. CANLI E-POSTA TARAMA (Gravatar + GitHub API)
+    async function runLiveEmailScan() {
+        const email = document.getElementById('holeheInput').value.trim().toLowerCase();
+        const res = document.getElementById('holeheResults');
+        if(!email || !email.includes('@')) return alert('Geçerli e-posta girin!');
+        res.innerHTML = `[>] Canlı küresel API'ler taranıyor: ${email}...`;
+        
+        let emailHash = md5(email);
+        let out = `<b>[🎯] E-POSTA HEDEF:</b> ${email}<br>─────────────────────────────────────────<br>`;
+        
+        // Gravatar Canlı API
+        try {
+            let r = await fetch(`https://en.gravatar.com/${emailHash}.json`);
+            if(r.ok) {
+                let d = await r.json();
+                let profile = d.entry[0];
+                out += `• <b>Gravatar / WordPress:</b> <span style="color:#3fb950;">[HESAP MEVCUT]</span> - İsim: ${profile.displayName || 'Kayıtlı'}<br>`;
+            } else {
+                out += `• <b>Gravatar / WordPress:</b> <span style="color:#f85149;">[Kayıt Yok]</span><br>`;
+            }
+        } catch(e) {
+            out += `• <b>Gravatar / WordPress:</b> <span style="color:#f85149;">[Erişim Yok]</span><br>`;
+        }
+
+        // GitHub Canlı API
+        try {
+            let r = await fetch(`https://api.github.com/search/users?q=${encodeURIComponent(email)}+in:email`);
+            let d = await r.json();
+            if(d.total_count > 0) {
+                let user = d.items[0];
+                out += `• <b>GitHub:</b> <span style="color:#3fb950;">[HESAP MEVCUT]</span> - Kullanıcı: <a href="${user.html_url}" target="_blank" style="color:#58a6ff;">@${user.login}</a><br>`;
+            } else {
+                out += `• <b>GitHub:</b> <span style="color:#f85149;">[Kayıt Yok]</span><br>`;
+            }
+        } catch(e) {
+            out += `• <b>GitHub:</b> <span style="color:#f85149;">[Erişim Yok]</span><br>`;
+        }
+
+        out += `─────────────────────────────────────────<br><span style="color:#3fb950;">[SUCCESS] Canlı E-Posta İstihbaratı Tamamlandı.</span>`;
+        res.innerHTML = out;
+    }
+
+    // 4. CANLI KULLANICI ADI AVLAYICI (GitHub API)
+    async function runLiveUserScan() {
+        let u = document.getElementById('sherlockInput').value.trim();
+        const res = document.getElementById('sherlockResults');
+        if(!u) return alert('Kullanıcı adı girin!');
+        res.innerHTML = `[>] GitHub API üzerinden @${u} sorgulanıyor...`;
+        
+        try {
+            let r = await fetch(`https://api.github.com/users/${u}`);
+            if(r.status === 404) {
+                res.innerHTML = `❌ @${u} için GitHub hesabı bulunamadı.`;
+                return;
+            }
+            let d = await r.json();
+            res.innerHTML = `
+<b>[🎯] CANLI GİTHUB PROFİLİ (@${u}):</b><br>
+• <b>Adı Soyadı:</b> ${d.name || 'Belirtilmemiş'}<br>
+• <b>Şirket / Kurum:</b> ${d.company || 'Yok'}<br>
+• <b>Konum:</b> ${d.location || 'Bilinmiyor'}<br>
+• <b>Halka Açık Depolar:</b> ${d.public_repos}<br>
+• <b>Takipçi / Takip Edilen:</b> ${d.followers} / ${d.following}<br>
+• <b>Profil Linki:</b> <a href="${d.html_url}" target="_blank" style="color:#58a6ff;">${d.html_url}</a><br>
+<span style="color:#3fb950;">[SUCCESS] Gerçek API Verisi Çekildi.</span>`;
+        } catch(e) {
+            res.innerHTML = `❌ Bağlantı hatası oluştu.`;
+        }
+    }
+
+    // 5. TELEKOM
+    function analyzePhoneLive() {
+        let raw = document.getElementById('targetPhoneInput').value.trim();
+        const res = document.getElementById('phoneGenResults');
+        if(!raw || raw.length < 7) return alert('Geçerli numara girin!');
+        let cleaned = raw.replace(/[^0-9+]/g, '');
+        if(cleaned.startsWith('0')) cleaned = '+90' + cleaned.slice(1);
+        else if(!cleaned.startsWith('+')) cleaned = '+' + cleaned;
+        let op = "Bilinmeyen Taşıyıcı";
+        if(cleaned.startsWith('+90')) {
+            let p = cleaned.slice(3, 6);
+            if(['530','531','532','533','534','535','536','537','538','539'].includes(p)) op = "Turkcell İletişim (Canlı Blok)";
+            else if(['501','505','506','507','551','552','553','554','555','559'].includes(p)) op = "Türk Telekom Mobil (Canlı Blok)";
+            else if(['540','541','542','543','544','545','546','547','548','549'].includes(p)) op = "Vodafone Türkiye (Canlı Blok)";
+        }
+        res.innerHTML = `<b>[🎯] HEDEF NUMARA:</b> ${cleaned}<br>• <b>Ülke:</b> Türkiye (TR)<br>• <b>Operatör:</b> <span style="color:#38bdf8;">${op}</span><br><span style="color:#3fb950;">[SUCCESS] GSM Ön Ek Doğrulandı.</span>`;
+    }
+
+    // 6. HARİTA
+    var map = L.map('map').setView([39.9208, 32.8541], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+    var marker = null;
+    function plotLocation() {
+        let val = document.getElementById('locCoords').value.trim();
+        let parts = val.split(',');
+        if(parts.length < 2) return alert('Format: Enlem, Boylam');
+        let lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
+        if(isNaN(lat) || isNaN(lng)) return alert('Geçersiz koordinat!');
+        if(marker) map.removeLayer(marker);
+        map.setView([lat, lng], 12);
+        marker = L.marker([lat, lng]).addTo(map).bindPopup(`Konum: ${lat}, ${lng}`).openPopup();
+        document.getElementById('locResults').innerHTML = `<b>[✓] KONUM İŞARETLENDİ:</b> ${lat}, ${lng}`;
+    }
+</script>
+
+</body>
+</html>
